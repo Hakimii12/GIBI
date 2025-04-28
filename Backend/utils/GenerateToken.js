@@ -4,7 +4,7 @@ dotenv.config();
 
 export const GenerateToken = (userId, role, res) => {
   const token = jwt.sign(
-    { userId, role },
+    { userId:userId.toString(), role },
     process.env.JWT_SECRET,
     { expiresIn: "3h" }
   );
@@ -13,7 +13,6 @@ export const GenerateToken = (userId, role, res) => {
     httpOnly: true,
     maxAge: 3 * 60 * 60 * 1000,
     sameSite: "strict",
-    secure: process.env.NODE_ENV === 'production'
   });
   
   return token;

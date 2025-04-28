@@ -14,6 +14,7 @@ dotenv.config();
 const port=process.env.PORT
 //initializing database
 Database()
+//initializing routes
 app.use('/api/auth', authRoutes)
 app.use('/api/messages', messages)
 app.use('/api/posts', postRoutes)

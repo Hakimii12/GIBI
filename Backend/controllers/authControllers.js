@@ -4,6 +4,9 @@ import { GenerateToken } from '../utils/GenerateToken.js'
 export async function Register(req,res){
     try {
       const {name,role,email,password}=req.body
+      if(role==="admin"){
+        return res.status(400).json({message:"admin cannot resgister by himself"})
+      }
       if(req.body.studentID){
         const {name,role,email,password,studentID}=req.body
         if(!name || !role || !email || !password  || !studentID){
@@ -51,10 +54,45 @@ export async function Register(req,res){
          email:email,
          password:hashedPassword
      })
-     generateToken(newUser._id,newUser.role,res)
+     GenerateToken(newUser._id,newUser.role,res)
      await newUser.save()
      return res.status(200).json({message:"successfully created new user"}) 
       }
+  } catch (error) {
+     res.status(500).json({message:error.message}) 
+     console.log(error)
+  }
+  }
+  export async function AdminRegister(req,res){
+    try {
+      const {name,role,email,password,title}=req.body
+        if(role!=="admin"){
+          return res.status(400).json({message:"admin can register only an admin"})
+        }
+        if(!name || !role || !email || !password || !title){
+          return res.status(400).json({message:"please fill all the fields"})
+     }
+     const user=await User.findOne({
+      $or:[
+          {email:email}
+      ]
+     });
+     if(user){
+        return res.status(400).json({message:"user already exists"})
+     }
+     const salt =await bcrypt.genSalt(10);
+     const hashedPassword =await bcrypt.hash(password,salt)
+     const newUser=new User({
+         name:name,
+         role:'admin',
+         email:email,
+         password:hashedPassword,
+         isApproved:true,
+         title:title
+     })
+     GenerateToken(newUser._id,newUser.role,res)
+     await newUser.save()
+     return res.status(200).json({message:"successfully created new user"}) 
   } catch (error) {
      res.status(500).json({message:error.message}) 
      console.log(error)
@@ -90,7 +128,6 @@ export async function Register(req,res){
     try {
  res.clearCookie('jwt', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     path: '/', 
 });

@@ -1,15 +1,18 @@
 import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 function Authenticated(){
   return async (req, res, next) => {
     try {
-      const token = req.cookies.token;
+      const token = req.cookies.jwt;
       if (!token) throw new Error('Authentication required');
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id);
-      
+      const user = await User.findById(decoded.userId);
       if (!user) throw new Error('User not found');
-      if (user.role !== 'admin' && !user.isApproved) {
+      // if(user.role !== 'admin'){
+
+      // }
+      if (!user.isApproved) {
         throw new Error('Account needs pending approval');
       }
 
