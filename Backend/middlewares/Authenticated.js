@@ -1,4 +1,3 @@
-//(Authentication Only)
 import jwt from 'jsonwebtoken';
 function Authenticated(){
   return async (req, res, next) => {
