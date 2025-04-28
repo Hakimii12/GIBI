@@ -1,0 +1,111 @@
+import User from '../models/User.js'
+import bcrypt from 'bcryptjs'
+import { GenerateToken } from '../utils/GenerateToken.js'
+export async function Register(req,res){
+    try {
+      const {name,role,email,password}=req.body
+      if(req.body.studentID){
+        const {name,role,email,password,studentID}=req.body
+        if(!name || !role || !email || !password  || !studentID){
+          return res.status(400).json({message:"please fill all the fields"})
+         }
+         const user=await User.findOne({
+          $or:[
+              {email:email},
+              {studentID:studentID},
+          ]
+         });
+         if(user){
+          return res.status(400).json({message:"user already exists"})
+       }
+       const salt =await bcrypt.genSalt(10);
+      const hashedPassword =await bcrypt.hash(password,salt)
+      const newUser=new User({
+          name:name,
+          role:role,
+          email:email,
+          password:hashedPassword,
+          studentID:studentID
+      })
+      GenerateToken(newUser._id,newUser.role,res)
+      await newUser.save()
+      return res.status(200).json({message:"successfully created new user"}) 
+      }
+      else{
+        if(!name || !role || !email || !password){
+          return res.status(400).json({message:"please fill all the fields"})
+     }
+     const user=await User.findOne({
+      $or:[
+          {email:email},
+      ]
+     });
+     if(user){
+        return res.status(400).json({message:"user already exists"})
+     }
+     const salt =await bcrypt.genSalt(10);
+     const hashedPassword =await bcrypt.hash(password,salt)
+     const newUser=new User({
+         name:name,
+         role:role,
+         email:email,
+         password:hashedPassword
+     })
+     generateToken(newUser._id,newUser.role,res)
+     await newUser.save()
+     return res.status(200).json({message:"successfully created new user"}) 
+      }
+  } catch (error) {
+     res.status(500).json({message:error.message}) 
+     console.log(error)
+  }
+  }
+  export async function Login(req,res){
+    try {
+      const user = await User.findOne({ email: req.body.email });
+      if (!user){
+        return(res.status(404).json({error:'user not found'}))
+      }
+  
+      const isMatch = await bcrypt.compare(req.body.password, user.password);
+      if (!isMatch){
+        return(res.status(401).json({error:'Invalid credentials'}))
+      }
+      if (!user.isApproved) throw new Error('Account pending approval');
+      GenerateToken(user._id, user.role, res)
+      return(res.status(200).json({
+        user: {
+          id: user._id,
+          name: user.name,
+          role: user.role,
+          email: user.email,
+          createdAt: user.createdAt
+        }
+      }))
+    } catch (err) {
+      res.status(401).json({ message: err.message });
+    }
+  }
+  export async function Logout(req,res){
+    try {
+ res.clearCookie('jwt', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/', 
+});
+return res.status(200).json({ message: "Successfully logged out" });
+    } catch (error) {
+        res.status(500).json({message:error.message})
+    }
+} 
+export async function Approval(req,res){
+    const {id}=req.params
+    const user=await User.findById(id).select("-password")
+    if(!user){
+      return res.status(404).json({error:"user not found"})
+    }
+    user.isApproved=true
+    await user.save()
+    return res.status(200).json({message:"approved"})
+}
