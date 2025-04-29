@@ -1,5 +1,24 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+export async function GetAllUser(req, res) {
+  try {
+    const users = await User.find({
+      role: { $in: ['teacher', 'student'] }
+    }).sort({ role: -1 }).select("-password"); 
+
+    const teachers = users.filter(u => u.role === 'teacher');
+    const students = users.filter(u => u.role === 'student');
+
+    const response = {
+      teachers,
+      students
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
 export async function FilterBasedSection(req,res){
     try {
       const filters = {
@@ -74,6 +93,11 @@ export async function ProfileUpdate(req,res){
             user.password = hashedPassword;
         }
         await user.save();
+        res.status(200).json({
+          success: true,
+          message: "Profile updated successfully",
+          data: user
+        });
        }
        else if(user.role==="teacher"){
         if(!occupation){
