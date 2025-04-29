@@ -163,3 +163,27 @@ export async function Approval(req,res){
     );
     return res.status(200).json({message:"approved"})
 }
+export async function TeacherResponsibilities(req, res) {
+  const { id } = req.params;
+  const { assignments } = req.body;
+  try {
+
+    const teacher = await User.findById(id);
+    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+    if (teacher.role !== 'teacher') return res.status(400).json({ message: 'User is not a teacher' });
+
+    if (!Array.isArray(assignments) || assignments.some(a => !a.section || !a.subject)) {
+      return res.status(400).json({ message: 'Invalid assignments format' });
+    }
+
+    teacher.secAssigned = assignments;
+    await teacher.save();
+
+    res.json({ 
+      message: 'Responsibilities assigned successfully',
+      assignments: teacher.secAssigned
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error assigning responsibilities', error: error.message });
+  }
+}

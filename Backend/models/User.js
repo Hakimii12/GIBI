@@ -9,7 +9,10 @@ const userSchema = new mongoose.Schema({
   // Admin specific
   title: String,
   // Teacher specific
-  secAssigned: { type: Array, default: [] },
+  secAssigned: [{
+    section: { type: String, required: true },
+    subject: { type: String, required: true }
+  }],
   occupation: String,
   // Student specific
   batch: String,
@@ -18,6 +21,7 @@ const userSchema = new mongoose.Schema({
   department: String,
   studentID: {
     type: String,
+    unique:true,
     required: function() {
       return this.role === 'student';
     },

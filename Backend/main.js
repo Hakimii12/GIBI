@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js"
 import messages from './routes/messageRoutes.js'
 import postRoutes from './routes/postRoutes.js'
 import resource from './routes/resourceRoutes.js'
+import userRoutes from './routes/userRoutes.js'
 const app=express()
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
@@ -16,6 +17,7 @@ const port=process.env.PORT
 Database()
 //initializing routes
 app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
 app.use('/api/messages', messages)
 app.use('/api/posts', postRoutes)
 app.use('/api/resources', resource)
