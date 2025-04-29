@@ -5,7 +5,9 @@ import bcrypt from 'bcryptjs'
 async function Database() {
    dotenv.config()
    const db_string=process.env.DB_CONNNECTION_STRING
-    mongoose.connect(db_string)
+    mongoose.connect(db_string,{ 
+      serverSelectionTimeoutMS: 30000
+    })
     const db=mongoose.connection
     db.on('error',(error)=>{
         console.log('Error connecting to databse:'+error)
