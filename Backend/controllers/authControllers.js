@@ -139,10 +139,27 @@ return res.status(200).json({ message: "Successfully logged out" });
 export async function Approval(req,res){
     const {id}=req.params
     const user=await User.findById(id).select("-password")
+    const currentUser=req.user;
+    const currentUserId=currentUser._id
     if(!user){
       return res.status(404).json({error:"user not found"})
     }
-    user.isApproved=true
-    await user.save()
+    if (user.suspendedBy && user.suspendedBy.toString() !== currentUserId.toString()) {
+      return res.status(403).json({ message: 'Only the admin who suspended this user can approve them' });
+    }
+    if(user.isApproved){
+        user.isApproved= false;
+        user.suspendedBy=currentUserId;
+        await user.save();
+        return res.status(200).json({message:"suspended !!"})
+    }
+    await User.findByIdAndUpdate(
+      id,
+      {
+        $set: { isApproved: true },
+        $unset: { suspendedBy: "" }
+      },
+      { new: true }
+    );
     return res.status(200).json({message:"approved"})
 }

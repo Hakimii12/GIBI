@@ -5,9 +5,11 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'teacher', 'student'], required: true },
   isApproved: { type: Boolean, default: false },
+  suspendedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   // Admin specific
   title: String,
   // Teacher specific
+  secAssigned: { type: Array, default: [] },
   occupation: String,
   // Student specific
   batch: String,
