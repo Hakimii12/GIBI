@@ -1,3 +1,9 @@
+/* Updating or adding code to this section is not permitted for any stakeholders
+   but if it happen or it have to happen please report the about the change to me &
+    make sure to add the comment to which part 
+you have add or make a change on the top of this comment!!!!!!!!
+*/
+import cloudinary from "../database//Cloudinary.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 export async function GetAllUser(req, res) {
@@ -65,8 +71,8 @@ export async function FilterById(req,res){
 export async function ProfileUpdate(req,res){
     const {id}=req.params
     const userId=req.user._id
-    console.log(userId)
-    const {name ,email,profilePic,bio,batch,section,school,department,title,occupation,password} = req.body;
+    console.log(req.file)
+    const {name ,email,bio,batch,section,school,department,title,occupation,password} = req.body;
     try {
        if(userId.toString()!==id.toString()){
         return res.status(403).json({message:"you are not authorized to update this profile"})
@@ -74,14 +80,17 @@ export async function ProfileUpdate(req,res){
        const user =await User.findById(id)
        if (!user) {
            return res.status(404).json({ message: "User not found" });
-       } 
+       }
        if(user.role==="student"){
         if(!batch || !section || !school || !department){
             return res.status(400).json({message:"batch ,section ,school and department are required"})
         }
+        if(req.file){
+          const result = await cloudinary.uploader.upload(req.file.path);
+          user.profilePic = result.secure_url;
+        }
         user.name = name || user.name;
         user.email = email || user.email;
-        user.profilePic = profilePic || user.profilePic;
         user.bio = bio||user.bio;
         user.batch=batch;
         user.section=section;
@@ -103,9 +112,12 @@ export async function ProfileUpdate(req,res){
         if(!occupation){
             return res.status(400).json({message:"occupation is required"})
         }
+        if(req.file){
+          const result = await cloudinary.uploader.upload(req.file.path);
+          user.profilePic = result.secure_url;
+        }; 
         user.name = name || user.name;
         user.email = email || user.email;
-        user.profilePic = profilePic || user.profilePic;
         user.bio = bio||user.bio;
         user.occupation=occupation;
         if (password) {
@@ -124,9 +136,12 @@ export async function ProfileUpdate(req,res){
         if(!title){
             return res.status(400).json({message:"occupation is required"})
         }
+        if(req.file){
+          const result = await cloudinary.uploader.upload(req.file.path);
+          user.profilePic = result.secure_url;
+        }
         user.name = name || user.name;
         user.email = email || user.email;
-        user.profilePic = profilePic || user.profilePic;
         user.bio = bio||user.bio;
         user.title=title;
         if (password) {
