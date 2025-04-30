@@ -1,3 +1,8 @@
+/* Updating or adding code to this section is not permitted for any stakeholders
+   but if it happen or it have to happen please report the about the change to me &
+    make sure to add the comment to which part 
+you have add or make a change on the top of this comment!!!!!!!!
+*/
 import User from '../models/User.js'
 import bcrypt from 'bcryptjs'
 import { GenerateToken } from '../utils/GenerateToken.js'
@@ -139,10 +144,51 @@ return res.status(200).json({ message: "Successfully logged out" });
 export async function Approval(req,res){
     const {id}=req.params
     const user=await User.findById(id).select("-password")
+    const currentUser=req.user;
+    const currentUserId=currentUser._id
     if(!user){
       return res.status(404).json({error:"user not found"})
     }
-    user.isApproved=true
-    await user.save()
+    if (user.suspendedBy && user.suspendedBy.toString() !== currentUserId.toString()) {
+      return res.status(403).json({ message: 'Only the admin who suspended this user can approve them' });
+    }
+    if(user.isApproved){
+        user.isApproved= false;
+        user.suspendedBy=currentUserId;
+        await user.save();
+        return res.status(200).json({message:"suspended !!"})
+    }
+    await User.findByIdAndUpdate(
+      id,
+      {
+        $set: { isApproved: true },
+        $unset: { suspendedBy: "" }
+      },
+      { new: true }
+    );
     return res.status(200).json({message:"approved"})
+}
+export async function TeacherResponsibilities(req, res) {
+  const { id } = req.params;
+  const { assignments } = req.body;
+  try {
+
+    const teacher = await User.findById(id);
+    if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+    if (teacher.role !== 'teacher') return res.status(400).json({ message: 'User is not a teacher' });
+
+    if (!Array.isArray(assignments) || assignments.some(a => !a.section || !a.subject)) {
+      return res.status(400).json({ message: 'Invalid assignments format' });
+    }
+
+    teacher.secAssigned = assignments;
+    await teacher.save();
+
+    res.json({ 
+      message: 'Responsibilities assigned successfully',
+      assignments: teacher.secAssigned
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error assigning responsibilities', error: error.message });
+  }
 }
