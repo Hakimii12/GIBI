@@ -72,7 +72,7 @@ export async function Register(req,res){
     try {
       const {name,role,email,password,title}=req.body
         if(role!=="admin"){
-          return res.status(400).json({message:"admin can register only an admin"})
+          return res.status(400).json({message:`${role} cannot be registered by admin`})
         }
         if(!name || !role || !email || !password || !title){
           return res.status(400).json({message:"please fill all the fields"})
@@ -148,9 +148,6 @@ export async function Approval(req,res){
     const currentUserId=currentUser._id
     if(!user){
       return res.status(404).json({error:"user not found"})
-    }
-    if(user.role==="admin"){
-      return res.status(400).json({message:"admin cannot be approved or suspended"})
     }
     if (user.suspendedBy && user.suspendedBy.toString() !== currentUserId.toString()) {
       return res.status(403).json({ message: 'Only the admin who suspended this user can approve them' });

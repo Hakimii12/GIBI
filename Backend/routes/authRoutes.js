@@ -11,7 +11,7 @@ const router = express.Router()
 router.post('/login', Login);
 router.post('/register', Register);
 router.post('/adminRegister', Authenticated(), Authorization("admin"), AdminRegister);
-router.post('/logout', Logout);
+router.post('/logout',Authenticated(), Logout);
 router.post('/approval/:id', Authenticated(), Authorization("admin"), Approval);
 router.put('/assignTeacherResponsibilities/:id',Authenticated(),Authorization("admin"), TeacherResponsibilities);
 export default router

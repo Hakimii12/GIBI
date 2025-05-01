@@ -16,7 +16,7 @@ export async function PublicPostDelete(req,res){
 
 }
 export async function InstructionalPostCreation(req,res){
-
+     
 }
 export async function GetInstructionalPost(req,res){
 
