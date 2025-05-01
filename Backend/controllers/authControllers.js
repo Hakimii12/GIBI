@@ -149,8 +149,14 @@ export async function Approval(req,res){
     if(!user){
       return res.status(404).json({error:"user not found"})
     }
+    if(user.role==="admin"){
+      return res.status(400).json({message:"admin cannot be approved or suspended"})
+    }
     if (user.suspendedBy && user.suspendedBy.toString() !== currentUserId.toString()) {
       return res.status(403).json({ message: 'Only the admin who suspended this user can approve them' });
+    }
+    if(user.role === "admin"){
+      return res.status(400).json({message:"admin cannot be approved or suspended"})
     }
     if(user.isApproved){
         user.isApproved= false;
