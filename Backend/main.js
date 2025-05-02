@@ -4,7 +4,6 @@ import Database from './database/database.js'
 import cookieParser from 'cookie-parser'
 import authRoutes from "./routes/authRoutes.js"
 import messages from './routes/messageRoutes.js'
-import postRoutes from './routes/postRoutes.js'
 import resource from './routes/resourceRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import cors from "cors"
@@ -27,7 +26,6 @@ Database()
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/messages', messages)
-app.use('/api/posts', postRoutes)
 app.use('/api/resources', resource)
 app.get('/', (req, res) => {
   res.send("Server is running 🚀");
