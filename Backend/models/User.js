@@ -1,9 +1,3 @@
-/* Updating or adding code to this section is not permitted for any stakeholders
-   but if it happen or it have to happen please report the about the change to me &
-    make sure to add the comment to which part 
-you have add or make a change on the top of this comment!!!!!!!!
-*/
-
 import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -17,7 +11,9 @@ const userSchema = new mongoose.Schema({
   // Teacher specific
   secAssigned: [{
     section: { type: String, required: true },
-    subject: { type: String, required: true }
+    subject: { type: String, required: true },
+    department:{ type:String, required:true },
+    school:{type:String,required:true}
   }],
   occupation: String,
   // Student specific
