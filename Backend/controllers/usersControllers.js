@@ -35,7 +35,9 @@ export async function FilterBasedSection(req, res) {
     const students = await User.find(filters)
       .select("name email batch section school department profilePic")
       .lean();
-
+    if(!students || students.length === 0){
+      return res.status(404).json({message:"No students found"})
+    }
     res.status(200).json({
       success: true,
       count: students.length,
