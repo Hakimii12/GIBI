@@ -3,10 +3,11 @@ import dotenv from 'dotenv'
 import Database from './database/database.js'
 import cookieParser from 'cookie-parser'
 import authRoutes from "./routes/authRoutes.js"
-import messages from './routes/messageRoutes.js'
+import messagesRoutes from './routes/messagesRoutes.js'
 import resource from './routes/resourceRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import instructionalRoutes from './routes/instructional.js'
+import engagementRoutes from "./routes/engagementRoutes.js"
 import cors from "cors"
 const app=express()
 app.use(express.json())
@@ -26,9 +27,10 @@ Database()
 //initializing routes
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
-app.use('/api/messages', messages)
+app.use('/api/messages', messagesRoutes)
 app.use('/api/resources', resource)
 app.use('/api/instructional', instructionalRoutes)
+app.use('/api/engagement', engagementRoutes)
 app.get('/', (req, res) => {
   res.send("Server is running 🚀");
 });
