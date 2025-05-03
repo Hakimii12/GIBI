@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js"
 import messages from './routes/messageRoutes.js'
 import resource from './routes/resourceRoutes.js'
 import userRoutes from './routes/userRoutes.js'
+import instructionalRoutes from './routes/instructional.js'
 import cors from "cors"
 const app=express()
 app.use(express.json())
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/messages', messages)
 app.use('/api/resources', resource)
+app.use('/api/instructional', instructionalRoutes)
 app.get('/', (req, res) => {
   res.send("Server is running 🚀");
 });
