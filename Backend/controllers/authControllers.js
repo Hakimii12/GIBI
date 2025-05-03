@@ -180,7 +180,7 @@ export async function TeacherResponsibilities(req, res) {
     if (teacher.role !== "teacher")
       return res.status(400).json({ message: "User is not a teacher" });
 
-    if (!Array.isArray(assignments) || assignments.some(a => !a.section || !a.subject)) {
+    if (!Array.isArray(assignments) || assignments.some(a => !a.section || !a.subject || !a.school)) {
       return res.status(400).json({ message: 'Invalid assignments format' });
     }
     teacher.secAssigned = assignments;
