@@ -84,28 +84,35 @@ export async function DeleteInstructionalPost(req,res){
         res.status(500).json({ message: "Internal server error" });
     }
 }
-export async function GetInstructionalPostsBySection(req,res){
-    const {batch, section ,school,department}=req.user
-    try {
-      if(department){
-        const posts = await Post.find({ 
-        'target.batch': batch, 
-        'target.section': section, 
-        'target.school': school, 
-        'target.department': department,
-        'type': 'instructional'
-      }).populate('author', 'name');
-      return res.status(200).json(posts)
-      }
-      const posts = await Post.find({ 
-        'target.batch': batch, 
-        'target.section': section, 
-        'target.school': school, 
-        'type': 'instructional'
-      }).populate('author', 'name');
-      return res.status(200).json(posts);
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({message:error.message})
+export async function GetStudentInstructionalPosts(req, res) {
+  try {
+    const studentId = req.user._id;
+    
+    const student = await User.findById(studentId);
+    if (!student || student.role !== "student") {
+      return res.status(403).json({ message: "Unauthorized access" });
     }
+
+    const { batch, section, school, department } = student;
+
+    const posts = await Post.find({
+      type: "instructional",
+      "target.batch": batch,
+      "target.section": section,
+      "target.school": school,
+      $or: [
+        { "target.department": { $exists: false } },
+        { "target.department": department }
+      ]
+    })
+      .sort({ createdAt: -1 }) 
+      .populate("author", "name email");
+
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching instructional posts",
+      error: error.message,
+    });
+  }
 }
