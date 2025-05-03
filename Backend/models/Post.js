@@ -14,11 +14,18 @@ const postSchema = new mongoose.Schema({
     school: String,
     department: String,
   },
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  like: { type: [mongoose.Schema.Types.ObjectId], ref: "User" ,default:[]},
   comments: [
     {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       text: String,
+      email:{
+        type:String,
+        required:true
+       },
+       profilepic:{
+        type:String
+    },
       createdAt: { type: Date, default: Date.now },
     },
   ],
