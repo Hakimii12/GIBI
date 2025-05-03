@@ -84,3 +84,28 @@ export async function DeleteInstructionalPost(req,res){
         res.status(500).json({ message: "Internal server error" });
     }
 }
+export async function GetInstructionalPostsBySection(req,res){
+    const {batch, section ,school,department}=req.user
+    try {
+      if(department){
+        const posts = await Post.find({ 
+        'target.batch': batch, 
+        'target.section': section, 
+        'target.school': school, 
+        'target.department': department,
+        'type': 'instructional'
+      }).populate('author', 'name');
+      return res.status(200).json(posts)
+      }
+      const posts = await Post.find({ 
+        'target.batch': batch, 
+        'target.section': section, 
+        'target.school': school, 
+        'type': 'instructional'
+      }).populate('author', 'name');
+      return res.status(200).json(posts);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({message:error.message})
+    }
+}
