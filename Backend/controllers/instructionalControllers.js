@@ -1,3 +1,4 @@
+import APIFeatures from '../utils/APIFeatures.js'
 import cloudinary from "../database//Cloudinary.js";
 import User from "../models/User.js";
 import Post from "../models/Post.js";
@@ -85,6 +86,7 @@ export async function DeleteInstructionalPost(req,res){
     }
 }
 export async function GetStudentInstructionalPosts(req, res) {
+  console.log('Incoming query params:', req.query);
   try {
     const studentId = req.user._id;
     
@@ -95,7 +97,8 @@ export async function GetStudentInstructionalPosts(req, res) {
 
     const { batch, section, school, department } = student;
 
-    const posts = await Post.find({
+
+    const baseFilter = {
       type: "instructional",
       "target.batch": batch,
       "target.section": section,
@@ -104,11 +107,38 @@ export async function GetStudentInstructionalPosts(req, res) {
         { "target.department": { $exists: false } },
         { "target.department": department }
       ]
-    })
-      .sort({ createdAt: -1 }) 
-      .populate("author", "name email");
+    };
 
-    res.status(200).json(posts);
+    const totalDocs = await Post.countDocuments(baseFilter);
+
+    const features = new APIFeatures(
+      Post.find(baseFilter), 
+      req.query
+    )
+      .filter()
+      .search()
+      .sort()
+      .limitField()
+      .paginate();
+
+    const posts = await features.query.populate("author", "name email");
+
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        posts,
+      },
+    });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching instructional posts",
