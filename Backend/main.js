@@ -35,5 +35,5 @@ app.get('/', (req, res) => {
   res.send("Server is running 🚀");
 });
 app.listen(port,()=>{
-    console.log(`server is running on port http://localhost:/${port}`)
+    console.log(`server is running 🚀 on port http://localhost:/${port}`)
 })
