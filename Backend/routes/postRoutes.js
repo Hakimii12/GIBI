@@ -34,38 +34,38 @@ router.post(
   AnnouncementPostCreation
 );
 router.get(
-  "/getAnnouncementPost",
+  "/announcementPosts",
   Authenticated(),
   GetAnnouncementPost
 );
 
 router.delete(
-  "/announcementPostDelete/:id",
+  "/announcementPost/:id",
   Authenticated(),
   Authorization("admin"),
   AnnouncementPostDelete  )
 
 router.post(
-  "/publicPostCreation",
+  "/publicPost",
   Authenticated(),  
   Upload.single("files"),
   PublicPostCreation
 )
 
 router.get(
-  "/getPublicPost",
+  "/publicPosts",
   Authenticated(),
   GetPublicPost
 )
 
 router.delete(
-  "/publicPostDelete/:id",
+  "/publicPost/:id",
   Authenticated(),
   PublicPostDelete,
 )
 
 router.get(
-  "/getMyPost",
+  "/myPosts",
   Authenticated(),  
   GetMyPost
 )
