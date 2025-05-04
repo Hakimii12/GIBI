@@ -67,7 +67,8 @@ export async function Register(req,res){
      res.status(500).json({message:error.message}) 
      console.log(error)
   }
-  }
+}
+
   export async function AdminRegister(req,res){
     try {
       const {name,role,email,password,title}=req.body
@@ -102,7 +103,8 @@ export async function Register(req,res){
      res.status(500).json({message:error.message}) 
      console.log(error)
   }
-  }
+}
+
   export async function Login(req,res){
     try {
       const user = await User.findOne({ email: req.body.email });
@@ -128,7 +130,8 @@ export async function Register(req,res){
     } catch (err) {
       res.status(401).json({ message: err.message });
     }
-  }
+}
+
   export async function Logout(req,res){
     try {
  res.clearCookie('jwt', {
@@ -141,6 +144,7 @@ return res.status(200).json({ message: "Successfully logged out" });
         res.status(500).json({message:error.message})
     }
 } 
+
 export async function Approval(req,res){
     const {id}=req.params
     const user=await User.findById(id).select("-password")
@@ -174,6 +178,7 @@ export async function Approval(req,res){
     );
     return res.status(200).json({message:"approved"})
 }
+
 export async function TeacherResponsibilities(req, res) {
   const { id } = req.params;
   const { assignments } = req.body;
