@@ -13,7 +13,8 @@ const APIFeatures = class {
         department: ["department", "target.department"],
         batch: ["batch", "target.batch"],
         section: ["target.section"], 
-        year:["year"]
+        year:["year"],
+        title: ["title"],
       };
   
 

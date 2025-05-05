@@ -67,7 +67,7 @@ export async function GetInstructionalPosts(req, res) {
       req.query
     )
       .filter()
-      .search(['target.section', 'target.subject', 'target.batch'])
+      .search()
       .sort()
       .limitField()
       .paginate();
@@ -114,7 +114,6 @@ export async function DeleteInstructionalPost(req,res){
     }
 }
 export async function GetStudentInstructionalPosts(req, res) {
-  console.log('Incoming query params:', req.query);
   try {
     const studentId = req.user._id;
     

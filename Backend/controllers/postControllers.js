@@ -1,6 +1,7 @@
 import cloudinary from "../database//Cloudinary.js";
 import User from "../models/User.js";
 import Post from "../models/Post.js";
+import APIFeatures from "../utils/APIFeatures.js";
 export async function PublicPostCreation(req, res) {
   try {
     let { content, files, title } = req.body;
@@ -58,23 +59,44 @@ export async function PublicPostCreation(req, res) {
 }
 export async function GetPublicPost(req, res) {
   try {
-    const post = await Post.find({ type: "public" })
-      .populate(
-        "author",
-        "name email batch section school department profilePic"
-      )
+    const totalDocs = await Post.countDocuments({ type: "public" })
       .sort({ createdAt: -1 });
-    if (!post || post.length === 0) {
+       const features = new APIFeatures(
+            Post.find({ type: "public" }), 
+            req.query
+          )
+            .filter()
+            .search()
+            .sort()
+            .limitField()
+            .paginate();
+      const posts=await features.query.populate( "author",
+      "name email batch section school department profilePic").sort({ createdAt: -1 });
+    if (!posts || posts.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No public posts found.",
       });
     }
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+
     res.status(200).json({
-      success: true,
-      data: post,
+      status: "success",
+      results: posts.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        posts,
+      },
     });
-  } catch (error) {}
+  } catch (error) {
+    return res.status(500).json({message:error.message})
+  }
 }
 export async function PublicPostDelete(req, res) {
   try {
@@ -171,27 +193,43 @@ export async function AnnouncementPostCreation(req, res) {
 
 export async function GetAnnouncementPost(req, res) {
   try {
-    const posts = await Post.find({ type: "announcement" })
-      .populate("author", "name email ")
+    const totalDocs = await Post.countDocuments({ type: "announcement" })
       .sort({ createdAt: -1 });
-
+       const features = new APIFeatures(
+            Post.find({ type: "announcement" }), 
+            req.query
+          )
+            .filter()
+            .search()
+            .sort()
+            .limitField()
+            .paginate();
+      const posts=await features.query.populate( "author",
+      "name email batch section school department profilePic").sort({ createdAt: -1 });
     if (!posts || posts.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "No announcement posts found.",
+        message: "No public posts found.",
       });
     }
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
 
     res.status(200).json({
-      success: true,
-      data: posts,
+      status: "success",
+      results: posts.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        posts,
+      },
     });
   } catch (error) {
-    console.error("Error fetching announcement posts:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error. Please try again later.",
-    });
+    return res.status(500).json({message:error.message})
   }
 }
 export async function AnnouncementPostDelete(req, res) {
@@ -226,8 +264,17 @@ export async function AnnouncementPostDelete(req, res) {
 export async function GetMyPost(req, res) {
   try {
     const userId = req.user.id;
-    const posts = await Post.find({ author: userId })
-      .populate("author", "name email batch section school department profilePic")
+    const totalDocs = await Post.countDocuments({ author: userId });
+    const features = new APIFeatures(
+      Post.find({ author: userId }), 
+      req.query
+    )
+      .filter()
+      .search()
+      .sort()
+      .limitField()
+      .paginate();
+    const posts = await features.query.populate("author", "name email batch section school department profilePic")
       .sort({ createdAt: -1 }); 
 
     if (!posts || posts.length === 0) {
@@ -237,9 +284,21 @@ export async function GetMyPost(req, res) {
       });
     }
 
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+
     res.status(200).json({
-      success: true,
-      data: posts,
+      status: "success",
+      results: posts.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        posts,
+      },
     });
   } catch (error) {
     console.error("Error fetching my posts:", error);
