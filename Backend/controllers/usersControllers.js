@@ -80,9 +80,7 @@ export async function StudentFiltering(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
-        student,
-      },
+        student
     });
   } catch (error) {
     console.error(error);
@@ -120,9 +118,7 @@ export async function TeacherFiltering(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
-        teacher,
-      },
+        teacher
     });
   } catch (error) {
     console.error(error);

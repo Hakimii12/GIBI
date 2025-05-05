@@ -24,7 +24,7 @@ async function Database() {
         password: await bcrypt.hash("123qweQWE@", 10),
         role: 'admin',
         title: 'System Administrator',
-        isApproved: true
+        status:'approved',
       });
       await admin.save();
       console.log('Initial admin created');

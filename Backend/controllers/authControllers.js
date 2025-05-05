@@ -124,16 +124,16 @@ export async function Login(req, res) {
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
-    if (!user.isApproved) throw new Error("Account pending approval");
+    if (user.status!=='approved') throw new Error("Account pending approval");
     GenerateToken(user._id, user.role, res);
     return res.status(200).json({
-      user: {
+  
         id: user._id,
         name: user.name,
         role: user.role,
         email: user.email,
         createdAt: user.createdAt,
-      },
+      
     });
   } catch (err) {
     res.status(401).json({ message: err.message });
@@ -175,7 +175,11 @@ export async function Approval(req, res) {
   } else if (userStatus === "suspend") {
     user.status = "suspended";
     user.suspendedBy = currentUserId;
-  } else {
+  } else if(userStatus === "reject"){
+    user.status = "rejected";
+    user.suspendedBy = undefined;
+  }
+  else {
     return res.status(400).json({ message: "Invalid action. Use 'approve' or 'suspend'." });
   }
 

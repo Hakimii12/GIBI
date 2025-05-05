@@ -90,9 +90,7 @@ export async function GetPublicPost(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
-        posts,
-      },
+        posts
     });
   } catch (error) {
     return res.status(500).json({message:error.message})
@@ -224,9 +222,7 @@ export async function GetAnnouncementPost(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
         posts,
-      },
     });
   } catch (error) {
     return res.status(500).json({message:error.message})
@@ -296,9 +292,7 @@ export async function GetMyPost(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
-        posts,
-      },
+        posts
     });
   } catch (error) {
     console.error("Error fetching my posts:", error);
