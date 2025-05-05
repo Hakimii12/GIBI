@@ -2,61 +2,80 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import { GenerateToken } from "../utils/GenerateToken.js";
 export async function Register(req, res) {
+  const {
+    name,
+    email,
+    studentID,
+    batch,
+    section,
+    school,
+    department,
+    occupation,
+    password,
+    role
+  } = req.body;
+
   try {
-    const { name, role, email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ 
+        message: "Name, email, password, and role are required" 
+      });
+    }
+
     if (role === "admin") {
-      return res
-        .status(400)
-        .json({ message: "admin cannot resgister by himself" });
+      return res.status(403).json({ 
+        message: "Admin registration is not allowed here"
+      });
     }
-    if (req.body.studentID) {
-      const { name, role, email, password, studentID } = req.body;
-      if (!name || !role || !email || !password || !studentID) {
-        return res.status(400).json({ message: "please fill all the fields" });
+
+    if (role === "student") {
+      if (!batch || !section || !school || !department || ! studentID ) {
+        return res.status(400).json({
+          message: "Batch, section, school,department and studentID are required for students"
+        });
       }
-      const user = await User.findOne({
-        $or: [{ email: email }, { studentID: studentID }],
-      });
-      if (user) {
-        return res.status(400).json({ message: "user already exists" });
+    } else if (role === "teacher") {
+      if (!occupation) {
+        return res.status(400).json({ 
+          message: "Occupation is required for teachers" 
+        });
       }
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      const newUser = new User({
-        name: name,
-        role: role,
-        email: email,
-        password: hashedPassword,
-        studentID: studentID,
-      });
-      GenerateToken(newUser._id, newUser.role, res);
-      await newUser.save();
-      return res.status(200).json({ message: "successfully created new user" });
     } else {
-      if (!name || !role || !email || !password) {
-        return res.status(400).json({ message: "please fill all the fields" });
-      }
-      const user = await User.findOne({
-        $or: [{ email: email }],
-      });
-      if (user) {
-        return res.status(400).json({ message: "user already exists" });
-      }
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      const newUser = new User({
-        name: name,
-        role: role,
-        email: email,
-        password: hashedPassword,
-      });
-      GenerateToken(newUser._id, newUser.role, res);
-      await newUser.save();
-      return res.status(200).json({ message: "successfully created new user" });
+      return res.status(400).json({ message: "Invalid role" });
     }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      ...(role === "student" && { batch, section, school, department ,studentID }),
+      ...(role === "teacher" && { occupation })
+    });
+    await newUser.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully. Waiting for admin approval.",
+      data: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role
+      }
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
-    console.log(error);
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 }
 export async function AdminRegister(req, res) {
@@ -83,7 +102,7 @@ export async function AdminRegister(req, res) {
       role: "admin",
       email: email,
       password: hashedPassword,
-      isApproved: true,
+      status : "approved",
       title: title,
     });
     GenerateToken(newUser._id, newUser.role, res);
@@ -133,43 +152,39 @@ export async function Logout(req, res) {
   }
 }
 export async function Approval(req, res) {
-  const { id } = req.params;
+  const {userStatus ,id  } = req.params;
   const user = await User.findById(id).select("-password");
   const currentUser = req.user;
   const currentUserId = currentUser._id;
+
   if (!user) {
-    return res.status(404).json({ error: "user not found" });
+    return res.status(404).json({ error: "User not found" });
   }
-  if (
-    user.suspendedBy &&
-    user.suspendedBy.toString() !== currentUserId.toString()
-  ) {
-    return res
-      .status(403)
-      .json({
-        message: "Only the admin who suspended this user can approve them",
-      });
-  }
+
   if (user.role === "admin") {
-    return res
-      .status(400)
-      .json({ message: "admin cannot be approved or suspended" });
+    return res.status(400).json({ message: "Admins cannot be moderated" });
   }
-  if (user.isApproved) {
-    user.isApproved = false;
+  if (user.status === "suspended" && user.suspendedBy.toString() !== currentUserId.toString()) {
+    return res.status(403).json({
+      message: "Only the admin who suspended this user can approve/unsuspend them",
+    });
+  }
+  if (userStatus === "approve") {
+    user.status = "approved";
+    user.suspendedBy = undefined;
+  } else if (userStatus === "suspend") {
+    user.status = "suspended";
     user.suspendedBy = currentUserId;
-    await user.save();
-    return res.status(200).json({ message: "suspended !!" });
+  } else {
+    return res.status(400).json({ message: "Invalid action. Use 'approve' or 'suspend'." });
   }
-  await User.findByIdAndUpdate(
-    id,
-    {
-      $set: { isApproved: true },
-      $unset: { suspendedBy: "" },
-    },
-    { new: true }
-  );
-  return res.status(200).json({ message: "approved" });
+
+  await user.save();
+
+  return res.status(200).json({
+    message: `User ${userStatus === "approve" ? "approved" : "suspended"} successfully!`,
+    user,
+  });
 }
 export async function TeacherResponsibilities(req, res) {
   const { id } = req.params;
@@ -197,5 +212,20 @@ export async function TeacherResponsibilities(req, res) {
         message: "Error assigning responsibilities",
         error: error.message,
       });
+  }
+}
+export async function GetProfile(req,res){
+  const currentUserId = req.user._id
+  try {
+     const user=await User.findById(currentUserId).select("-password")
+     if(!user){
+      return res.status(404).json({message:"user not found"})
+     }
+     return res.status(200).json(user)
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message:error.message
+    })
   }
 }

@@ -1,6 +1,7 @@
 import cloudinary from "../database//Cloudinary.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import APIFeatures from "../utils/APIFeatures.js";
 export async function GetAllUser(req, res) {
   try {
     const users = await User.find({
@@ -51,15 +52,77 @@ export async function FilterBasedSection(req, res) {
     });
   }
 }
-export async function FilterById(req, res) {
+export async function StudentFiltering(req, res) {
   try {
-    const { studentId } = req.body;
-    const student = await User.find({ studentID: studentId }).select(
+    const totalDocs = await User.countDocuments({ role: "student" });
+     const features = new APIFeatures(
+          User.find({ role: "student" }), 
+          req.query
+        )
+          .filter()
+          .search()
+          .sort()
+          .limitField()
+          .paginate();
+
+    const student =  await features.query.select(
+      "name email batch section school department profilePic"
+    ).select("-password -secAssigned");
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+
+      res.status(200).json({
+      status: "success",
+      results: student.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        student,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+}
+export async function TeacherFiltering(req, res) {
+  try {
+    const totalDocs = await User.countDocuments({ role: "teacher" });
+     const features = new APIFeatures(
+          User.find({ role: "teacher" }), 
+          req.query
+        )
+          .filter()
+          .search()
+          .sort()
+          .limitField()
+          .paginate();
+
+    const teacher =  await features.query.select(
       "name email batch section school department profilePic"
     );
-    res.status(200).json({
-      success: true,
-      data: student,
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+
+      res.status(200).json({
+      status: "success",
+      results: teacher.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        teacher,
+      },
     });
   } catch (error) {
     console.error(error);
@@ -72,7 +135,6 @@ export async function FilterById(req, res) {
 export async function ProfileUpdate(req, res) {
   const { id } = req.params;
   const userId = req.user._id;
-  console.log(req.file);
   const {
     name,
     email,
@@ -85,98 +147,61 @@ export async function ProfileUpdate(req, res) {
     occupation,
     password,
   } = req.body;
+
   try {
+    // Authorization check
     if (userId.toString() !== id.toString()) {
-      return res
-        .status(403)
-        .json({ message: "you are not authorized to update this profile" });
+      return res.status(403).json({ 
+        message: "You are not authorized to update this profile" 
+      });
     }
+
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (user.role === "student") {
-      if (!batch || !section || !school || !department) {
-        return res
-          .status(400)
-          .json({
-            message: "batch ,section ,school and department are required",
-          });
-      }
-      if (req.file) {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        user.profilePic = result.secure_url;
-      }
-      user.name = name || user.name;
-      user.email = email || user.email;
-      user.bio = bio || user.bio;
-      user.batch = batch;
-      user.section = section;
-      user.school = school;
-      user.department = department;
-      if (password) {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        user.password = hashedPassword;
-      }
-      await user.save();
-      res.status(200).json({
-        success: true,
-        message: "Profile updated successfully",
-        data: user,
-      });
-    } else if (user.role === "teacher") {
-      if (!occupation) {
-        return res.status(400).json({ message: "occupation is required" });
-      }
-      if (req.file) {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        user.profilePic = result.secure_url;
-      }
-      user.name = name || user.name;
-      user.email = email || user.email;
-      user.bio = bio || user.bio;
-      user.occupation = occupation;
-      if (password) {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        user.password = hashedPassword;
-      }
-      await user.save();
-      res.status(200).json({
-        success: true,
-        message: "Profile updated successfully",
-        data: user,
-      });
-    } else if (user.role === "admin") {
-      if (!title) {
-        return res.status(400).json({ message: "occupation is required" });
-      }
-      if (req.file) {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        user.profilePic = result.secure_url;
-      }
-      user.name = name || user.name;
-      user.email = email || user.email;
-      user.bio = bio || user.bio;
-      user.title = title;
-      if (password) {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        user.password = hashedPassword;
-      }
-      await user.save();
-      res.status(200).json({
-        success: true,
-        message: "Profile updated successfully",
-        data: user,
-      });
+
+    // Upload profile picture if file exists
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path);
+      user.profilePic = result.secure_url;
     }
+
+    // Update common fields
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.bio = bio || user.bio;
+
+    // Role-specific updates
+    if (user.role === "student") {
+      user.batch = batch || user.batch;
+      user.section = section || user.section;
+      user.school = school || user.school;
+      user.department = department || user.department;
+    } else if (user.role === "teacher") {  // Fixed duplicate condition
+      user.occupation = occupation || user.occupation;
+    } else if (user.role === "admin") {
+      user.title = title || user.title;
+    }
+
+    // Update password if provided
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.password = hashedPassword;
+    }
+
+    await user.save();
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: user,
+    });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: error.message,
     });
-    console.error(error);
   }
 }
