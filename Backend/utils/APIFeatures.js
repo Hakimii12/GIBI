@@ -11,7 +11,6 @@ const APIFeatures = class {
         "sort",
         "limit",
         "fields",
-        "search",
         "searchFields",
       ];
       excludeFields.forEach((el) => delete queryObj[el]);
@@ -55,22 +54,28 @@ const APIFeatures = class {
         return this;
       }
   
-    search() {
-      if (this.queryStr.search) {
-        const searchValue = this.queryStr.search;
-        const searchFields = this.queryStr.searchFields
-          ? this.queryStr.searchFields.split(",")
-          : ["name", "title", "description"];
-  
-        const searchQuery = {
-          $or: searchFields.map((field) => ({
-            [field]: { $regex: searchValue, $options: "i" },
-          })),
-        };
-  
-        this.query = this.query.find(searchQuery);
+      search(customSearchFields) {
+        if (this.queryStr.search) {
+          const searchValue = this.queryStr.search;
+          const searchFields = customSearchFields || 
+            (this.queryStr.searchFields 
+              ? this.queryStr.searchFields.split(",") 
+              : ["name", "title", "description"]);
+          const searchQuery = {
+            $or: searchFields.map((field) => ({
+              [field]: { 
+                $regex: `^${searchValue}$`,
+                $options: "i" 
+              },
+            })),
+          };
+      
+          const currentFilter = this.query.getFilter();
+          this.query = this.query.find({
+            $and: [currentFilter, searchQuery],
+          });
+        }
+        return this;
       }
-      return this;
-    }
   };
   export default APIFeatures

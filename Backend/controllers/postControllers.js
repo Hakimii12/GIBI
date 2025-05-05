@@ -1,8 +1,3 @@
-/* Updating or adding code to this section is permitted for Abdulhakim and abduselam tesfaye
-   but if other stakeholders beside the authorized stakeholders, make the change to this page by any means,  please report the change to Abdulhakim or abduselam tesfaye&
-    make sure to add the comment to which part 
-you have added or made a change on the top of this comment!!!!!!!!
-*/
 import cloudinary from "../database//Cloudinary.js";
 import User from "../models/User.js";
 import Post from "../models/Post.js";
@@ -25,12 +20,12 @@ export async function PublicPostCreation(req, res) {
         mime ===
           "application/vnd.openxmlformats-officedocument.presentationml.presentation"
       ) {
-        resource_type = "raw"; // PDFs and presentations need this
+        resource_type = "raw";
       }
       const result = await cloudinary.uploader.upload(req.file.path, {
         resource_type: resource_type,
       });
-      files = [result.secure_url]; // Ensure files is an array
+      files = [result.secure_url];
     }
 
     const user = await User.findById(req.user.id);
@@ -67,7 +62,7 @@ export async function GetPublicPost(req, res) {
         "author",
         "name email batch section school department profilePic"
       )
-      .sort({ createdAt: -1 }); // Sort by creation date, most recent first
+      .sort({ createdAt: -1 });
     if (!post || post.length === 0) {
       return res.status(404).json({
         success: false,
@@ -132,14 +127,14 @@ export async function AnnouncementPostCreation(req, res) {
         mime ===
           "application/vnd.openxmlformats-officedocument.presentationml.presentation"
       ) {
-        resourceType = "raw"; // PDFs and presentations need this
+        resourceType = "raw";
       }
 
       const result = await cloudinary.uploader.upload(req.file.path, {
         resource_type: resourceType,
       });
 
-      files = [result.secure_url]; // Ensure files is an array
+      files = [result.secure_url];
     }
 
     const user = await User.findById(req.user.id);
@@ -176,7 +171,7 @@ export async function GetAnnouncementPost(req, res) {
   try {
     const posts = await Post.find({ type: "announcement" })
       .populate("author", "name email ")
-      .sort({ createdAt: -1 }); // Sort by creation date, most recent first
+      .sort({ createdAt: -1 });
 
     if (!posts || posts.length === 0) {
       return res.status(404).json({
@@ -228,10 +223,10 @@ export async function AnnouncementPostDelete(req, res) {
 }
 export async function GetMyPost(req, res) {
   try {
-    const userId = req.user.id; // Get the user ID from the authenticated user
+    const userId = req.user.id;
     const posts = await Post.find({ author: userId })
       .populate("author", "name email batch section school department profilePic")
-      .sort({ createdAt: -1 }); // Sort by creation date, most recent first
+      .sort({ createdAt: -1 }); 
 
     if (!posts || posts.length === 0) {
       return res.status(404).json({

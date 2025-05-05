@@ -96,7 +96,7 @@ export async function GetStudentInstructionalPosts(req, res) {
     }
 
     const { batch, section, school, department } = student;
-
+    console.log("Section:", section)
 
     const baseFilter = {
       type: "instructional",
@@ -110,17 +110,16 @@ export async function GetStudentInstructionalPosts(req, res) {
     };
 
     const totalDocs = await Post.countDocuments(baseFilter);
-
+    
     const features = new APIFeatures(
       Post.find(baseFilter), 
       req.query
     )
       .filter()
-      .search()
+      .search(['target.department', 'target.school', 'target.section', 'target.batch'])
       .sort()
       .limitField()
       .paginate();
-
     const posts = await features.query.populate("author", "name email");
 
     const limit = parseInt(req.query.limit) || 10;
