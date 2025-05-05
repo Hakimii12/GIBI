@@ -3,22 +3,23 @@
     make sure to add the comment to which part 
 you have add or make a change on the top of this comment!!!!!!!!
 */
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-function Authenticated(){
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+function Authenticated() {
   return async (req, res, next) => {
     try {
       const token = req.cookies.jwt;
-      if (!token) throw new Error('Authentication required');
+      if (!token) throw new Error("Authentication required");
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
       const user = await User.findById(decoded.userId);
-      if (!user) throw new Error('User not found');
+      if (!user) throw new Error("User not found");
       // if(user.role !== 'admin'){
 
       // }
       if (!user.isApproved) {
-        throw new Error('Account needs pending approval');
+        throw new Error("Account needs pending approval");
       }
 
       req.user = user;
@@ -27,5 +28,5 @@ function Authenticated(){
       res.status(401).json({ message: err.message });
     }
   };
-};
+}
 export default Authenticated;

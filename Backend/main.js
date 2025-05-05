@@ -16,7 +16,7 @@ app.use(express.urlencoded({extended:true}))
 app.use(cookieParser())
 //initializing cors
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'http://localhost:8080'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
