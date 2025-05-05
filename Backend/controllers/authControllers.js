@@ -102,7 +102,7 @@ export async function AdminRegister(req, res) {
       role: "admin",
       email: email,
       password: hashedPassword,
-      isApproved: true,
+      status : "approved",
       title: title,
     });
     GenerateToken(newUser._id, newUser.role, res);
@@ -152,43 +152,39 @@ export async function Logout(req, res) {
   }
 }
 export async function Approval(req, res) {
-  const { id } = req.params;
+  const {userStatus ,id  } = req.params;
   const user = await User.findById(id).select("-password");
   const currentUser = req.user;
   const currentUserId = currentUser._id;
+
   if (!user) {
-    return res.status(404).json({ error: "user not found" });
+    return res.status(404).json({ error: "User not found" });
   }
-  if (
-    user.suspendedBy &&
-    user.suspendedBy.toString() !== currentUserId.toString()
-  ) {
-    return res
-      .status(403)
-      .json({
-        message: "Only the admin who suspended this user can approve them",
-      });
-  }
+
   if (user.role === "admin") {
-    return res
-      .status(400)
-      .json({ message: "admin cannot be approved or suspended" });
+    return res.status(400).json({ message: "Admins cannot be moderated" });
   }
-  if (user.isApproved) {
-    user.isApproved = false;
+  if (user.status === "suspended" && user.suspendedBy.toString() !== currentUserId.toString()) {
+    return res.status(403).json({
+      message: "Only the admin who suspended this user can approve/unsuspend them",
+    });
+  }
+  if (userStatus === "approve") {
+    user.status = "approved";
+    user.suspendedBy = undefined;
+  } else if (userStatus === "suspend") {
+    user.status = "suspended";
     user.suspendedBy = currentUserId;
-    await user.save();
-    return res.status(200).json({ message: "suspended !!" });
+  } else {
+    return res.status(400).json({ message: "Invalid action. Use 'approve' or 'suspend'." });
   }
-  await User.findByIdAndUpdate(
-    id,
-    {
-      $set: { isApproved: true },
-      $unset: { suspendedBy: "" },
-    },
-    { new: true }
-  );
-  return res.status(200).json({ message: "approved" });
+
+  await user.save();
+
+  return res.status(200).json({
+    message: `User ${userStatus === "approve" ? "approved" : "suspended"} successfully!`,
+    user,
+  });
 }
 export async function TeacherResponsibilities(req, res) {
   const { id } = req.params;

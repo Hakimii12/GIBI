@@ -12,7 +12,7 @@ function Authenticated(){
       // if(user.role !== 'admin'){
 
       // }
-      if (!user.isApproved) {
+      if (user.status !== "approved") {
         throw new Error('Account needs pending approval');
       }
 

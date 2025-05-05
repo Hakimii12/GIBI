@@ -19,6 +19,7 @@ const APIFeatures = class {
         email:["email"],
         batch:["batch"],
         occupation:["occupation"],
+        studentID:["studentID"]
       };
   
 
