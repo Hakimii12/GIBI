@@ -144,7 +144,7 @@ export async function GetStudentInstructionalPosts(req, res) {
       req.query
     )
       .filter()
-      .search(['target.department', 'target.school', 'target.section', 'target.batch'])
+      .search()
       .sort()
       .limitField()
       .paginate();

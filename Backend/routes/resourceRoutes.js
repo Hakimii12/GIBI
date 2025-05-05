@@ -1,5 +1,7 @@
 import Authorization from "../middlewares/Authorization.js";
 import Upload from "../middlewares/Multer.js";
+import Authenticated from "../middlewares/Authenticated.js"
+import express from "express"
 import {
   ExitExamDelete,
   GetExitExam,
@@ -8,22 +10,19 @@ import {
   GetResource,
   ResourceCreation,
 } from "../controllers/resourceControllers.js";
-
 const router = express.Router();
-
-// Apply middlewares to relevant routes
 router.post(
   "/createExit-exams",
-  Authenticated,
-  Authorization(["teacher", "admin"]),
+  Authenticated(),
+  Authorization("teacher", "admin"),
   Upload.array("files"),
   ExitExamCreation
 );
-router.get("/getExit-exams", Authenticated, GetExitExam);
+router.get("/getExit-exams", Authenticated(), GetExitExam);
 router.delete(
   "/deleteExit-exams/:id",
-  Authenticated,
-  Authorization(["teacher", "admin"]),
+  Authenticated(),
+  Authorization("teacher", "admin"),
   ExitExamDelete
 );
 
@@ -34,10 +33,10 @@ router.post(
   Upload.array("files"),
   ResourceCreation
 );
-router.get("/getResources", Authenticated, GetResource);
+router.get("/getResources", Authenticated(), GetResource);
 router.delete(
   "/deleteResources/:id",
-  Authenticated,
+  Authenticated(),
   Authorization("teacher", "admin"),
   ResourceDelete
 );

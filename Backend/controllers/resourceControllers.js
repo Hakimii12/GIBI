@@ -1,26 +1,23 @@
-import cloudinary from "../database//Cloudinary.js";
-import User from "../models/User.js";
+import cloudinary from "../database/Cloudinary.js";
 import Resources from "../models/Resource.js";
-
+import APIFeatures from "../utils/APIFeatures.js";
 export async function ResourceCreation(req, res) {
 
   try {
     const fileUrls = await Promise.all(
       req.files.map(async (file) => {
-        console.log(`Uploading file: ${file.path}`); // Debugging line
         const uploadResult = await cloudinary.uploader.upload(file.path, {
-          resource_type: "auto", // Ensure this is correct
+          resource_type: "auto", 
         });
         return {
-          type: file.mimetype,
+          type: file.mimetype.split("/")[0],
           url: uploadResult.secure_url,
         };
       })
     );
-    // Create a new resource post
     const resource = new Resources({
-      authorId: req.user._id, // Authenticated user
-      type: "resource", // auto-set type
+      authorId: req.user._id, 
+      type: "resource",
       title: req.body.title,
       description: req.body.description,
       school: req.body.school,
@@ -36,7 +33,7 @@ export async function ResourceCreation(req, res) {
       resource,
     });
   } catch (err) {
-    console.error(err); // Log the error for debugging
+    console.error(err);
     return res.status(500).json({ error: err.message });
   }
 }
@@ -48,10 +45,9 @@ export async function ExitExamCreation(req, res) {
         const upload = await cloudinary.uploader.upload(file.path, {
           resource_type: "auto",
         });
-        return { type: file.mimetype, url: upload.secure_url };
+        return { type: file.mimetype.split("/")[0], url: upload.secure_url };
       })
     );
-
     const exitExam = new Resources({
       authorId: req.user._id,
       type: "exitExam",
@@ -73,23 +69,34 @@ export async function ExitExamCreation(req, res) {
 }
 
 export async function GetExitExam(req, res) {
-  try {
-    const { school, department, year } = req.query;
-
-    if (!school || !department) {
-      return res
-        .status(400)
-        .json({ error: "School and department are required filters." });
-    }
-
-    const filter = { type: "exitExam", school, department };
-    if (year) filter.year = year;
-
-    const exitExams = await Resources.find(filter)
-      .populate("authorId", "name email role")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json(exitExams);
+  try{
+    const totalDocs = await Resources.countDocuments({ type: "exitExam" });
+    const features = new APIFeatures(
+      Resources.find({ type: "exitExam" }),
+      req.query
+    )
+      .filter()
+      .search()
+      .sort()
+      .limitField()
+      .paginate();
+      
+    const resources = await features.query.populate("authorId", "name email role");
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    res.status(200).json({
+      status: "success",
+      results: resources.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        resources,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -112,28 +119,38 @@ export async function ExitExamDelete(req, res) {
 }
 
 export async function GetResource(req, res) {
-  try {
-    const { school, department, year } = req.query;
+  try{
+    const totalDocs = await Resources.countDocuments({ type: "resource" });
+    const features = new APIFeatures(
+      Resources.find({ type: "resource" }),
+      req.query
+    )
+      .filter()
+      .search()
+      .sort()
+      .limitField()
+      .paginate();
 
-    if (!school || !department) {
-      return res
-        .status(400)
-        .json({ error: "School and department are required filters." });
-    }
-
-    const filter = { type: "resource", school, department };
-    if (year) filter.year = year;
-
-    const resources = await Resources.find(filter)
-      .populate("authorId", "name email role")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json(resources);
+    const resources = await features.query.populate("authorId", "name email role");
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    res.status(200).json({
+      status: "success",
+      results: resources.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        resources,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
-
 export async function ResourceDelete(req, res) {
   try {
     const { id } = req.params;

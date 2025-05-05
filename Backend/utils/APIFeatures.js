@@ -6,25 +6,40 @@ const APIFeatures = class {
     }
     filter() {
       const queryObj = { ...this.queryStr };
-      const excludeFields = [
-        "page",
-        "sort",
-        "limit",
-        "fields",
-        "search",
-        "searchFields",
-      ];
+      const excludeFields = ["page", "sort", "limit", "fields", "search", "searchFields"];
       excludeFields.forEach((el) => delete queryObj[el]);
+      const multiPathFields = {
+        school: ["school", "target.school"],
+        department: ["department", "target.department"],
+        batch: ["batch", "target.batch"],
+        section: ["target.section"], 
+        year:["year"]
+      };
   
-      let queryString = JSON.stringify(queryObj);
-      queryString = queryString.replace(
-        /\b(gte|gt|lte|lt)\b/g,
-        (match) => `$${match}`
-      );
+
+      const finalFilter = {};
+
+      Object.keys(queryObj).forEach((key) => {
+        if (multiPathFields[key]) {
+          // For fields with multiple paths, create an $or condition
+          const orConditions = multiPathFields[key].map((path) => ({
+            [path]: queryObj[key],
+          }));
+          finalFilter.$or = orConditions;
+        } else {
+          // For other fields, add directly
+          finalFilter[key] = queryObj[key];
+        }
+      });
   
-      this.query = this.query.find(JSON.parse(queryString));
+      let queryStr = JSON.stringify(finalFilter);
+      queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+  
+      // Apply the filter to the query
+      this.query = this.query.find(JSON.parse(queryStr));
       return this;
     }
+  
   
     sort() {
       if (this.queryStr.sort) {
