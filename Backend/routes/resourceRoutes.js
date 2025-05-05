@@ -1,10 +1,3 @@
-/* Updating or adding code to this section is permitted only for Abdulbaset and abduselam muhammadnur
-   but if other stakeholders beside the authorized, make the change to this page by any means,  please report the change to Abdulbaset or abduselam muhammadnur&
-    make sure to add the comment to which part 
-you have added or made a change on the top of this comment!!!!!!!!
-*/
-import express from "express";
-import Authenticated from "../middlewares/Authenticated.js";
 import Authorization from "../middlewares/Authorization.js";
 import Upload from "../middlewares/Multer.js";
 import {
@@ -48,5 +41,4 @@ router.delete(
   Authorization("teacher", "admin"),
   ResourceDelete
 );
-
 export default router;
