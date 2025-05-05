@@ -93,9 +93,7 @@ export async function GetExitExam(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
-        resources,
-      },
+      resources,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -143,9 +141,7 @@ export async function GetResource(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
-        resources,
-      },
+        resources
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

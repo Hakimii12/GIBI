@@ -88,9 +88,7 @@ export async function GetInstructionalPosts(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
-        posts,
-      },
+      posts,
     });
   } catch (error) {
     console.error(error);
@@ -162,9 +160,7 @@ export async function GetStudentInstructionalPosts(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-      data: {
-        posts,
-      },
+        posts
     });
   } catch (error) {
     return res.status(500).json({
