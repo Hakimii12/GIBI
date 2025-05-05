@@ -6,6 +6,7 @@ const postSchema = new mongoose.Schema({
     enum: ["announcement", "instructional", "public"],
     required: true,
   },
+  title: { type: String },
   content: String,
   files: [String],
   target: {

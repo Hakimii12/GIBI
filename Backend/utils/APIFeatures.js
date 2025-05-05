@@ -11,6 +11,7 @@ const APIFeatures = class {
         "sort",
         "limit",
         "fields",
+        "search",
         "searchFields",
       ];
       excludeFields.forEach((el) => delete queryObj[el]);
@@ -60,16 +61,16 @@ const APIFeatures = class {
           const searchFields = customSearchFields || 
             (this.queryStr.searchFields 
               ? this.queryStr.searchFields.split(",") 
-              : ["name", "title", "description"]);
-          const searchQuery = {
-            $or: searchFields.map((field) => ({
-              [field]: { 
-                $regex: `^${searchValue}$`,
-                $options: "i" 
-              },
-            })),
-          };
+              : ["name", "title", "description"]); 
       
+              const searchQuery = {
+                $or: searchFields.map((field) => {
+                  const regex = field === "target.batch" 
+                    ? `^${searchValue}$` 
+                    : searchValue;
+                  return { [field]: { $regex: regex, $options: "i" } };
+                }),
+              };
           const currentFilter = this.query.getFilter();
           this.query = this.query.find({
             $and: [currentFilter, searchQuery],

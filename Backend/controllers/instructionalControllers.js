@@ -5,13 +5,13 @@ import Post from "../models/Post.js";
 import fs from 'fs/promises';
 export async function CreateInstructionalPost(req, res) {
   const currentUser = req.user._id;
-  const { batch, section, school, department, content } = req.body;
+  const { batch, section, school, department, content, subject } = req.body;
 
   try {
     const user = await User.findById(currentUser);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!batch || !section || !school) {
+    if (!batch || !section || !school || !subject || !content) {
       return res.status(400).json({ message: "Please fill all the fields" });
     }
 
@@ -19,21 +19,18 @@ export async function CreateInstructionalPost(req, res) {
       const isAssigned = user.secAssigned.some(sec => 
         sec.section === section && 
         sec.school === school && 
-        sec.department === department
+        sec.department === department &&
+        sec.subject === subject
       );
       if (!isAssigned) return res.status(403).json({ message: "Unauthorized for this section" });
     } else {
       const isAssigned = user.secAssigned.some(sec => 
         sec.section === section && 
-        sec.school === school
+        sec.school === school &&
+        sec.subject === subject
       );
       if (!isAssigned) return res.status(403).json({ message: "Unauthorized for this section" });
     }
-
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: "No files uploaded" });
-    }
-
     const uploadPromises = req.files.map(file => 
       cloudinary.uploader.upload(file.path, { folder: "instructional-posts" }) 
     );
@@ -44,7 +41,8 @@ export async function CreateInstructionalPost(req, res) {
       author: req.user._id,
       type: 'instructional',
       content: content,
-      files: fileUrls,
+      files: fileUrls || [],
+      subject: subject,
       target: { batch, section, school, department }
     });
 
@@ -59,15 +57,45 @@ export async function CreateInstructionalPost(req, res) {
     res.status(400).json({ message: err.message });
   }
 }
-export async function GetInstructionalPosts(req, res){
-    const currentUser=req.user._id;
-    try {
-        const posts = await Post.find({ author: currentUser }).populate('author', 'name');
-        res.status(200).json(posts);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+export async function GetInstructionalPosts(req, res) {
+  const currentUser = req.user._id;
+  try {
+    const baseFilter = { author: currentUser };
+    const totalDocs = await Post.countDocuments(baseFilter);
+    const features = new APIFeatures(
+      Post.find(baseFilter),
+      req.query
+    )
+      .filter()
+      .search(['target.section', 'target.subject', 'target.batch'])
+      .sort()
+      .limitField()
+      .paginate();
+
+    // Execute query
+    const posts = await features.query.populate('author', 'name');
+
+    // Pagination data
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      pagination: {
+        total: totalDocs,
+        limit,
+        page,
+        totalPages: Math.ceil(totalDocs / limit),
+      },
+      data: {
+        posts,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 }
 export async function DeleteInstructionalPost(req,res){
     
@@ -96,7 +124,7 @@ export async function GetStudentInstructionalPosts(req, res) {
     }
 
     const { batch, section, school, department } = student;
-    console.log("Section:", section)
+
 
     const baseFilter = {
       type: "instructional",
@@ -110,7 +138,7 @@ export async function GetStudentInstructionalPosts(req, res) {
     };
 
     const totalDocs = await Post.countDocuments(baseFilter);
-    
+
     const features = new APIFeatures(
       Post.find(baseFilter), 
       req.query
@@ -120,6 +148,7 @@ export async function GetStudentInstructionalPosts(req, res) {
       .sort()
       .limitField()
       .paginate();
+
     const posts = await features.query.populate("author", "name email");
 
     const limit = parseInt(req.query.limit) || 10;
@@ -139,7 +168,7 @@ export async function GetStudentInstructionalPosts(req, res) {
       },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error fetching instructional posts",
       error: error.message,
     });

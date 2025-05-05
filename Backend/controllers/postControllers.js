@@ -3,11 +3,11 @@ import User from "../models/User.js";
 import Post from "../models/Post.js";
 export async function PublicPostCreation(req, res) {
   try {
-    let { type, content, files } = req.body;
-    if (!content || !type) {
+    let { content, files, title } = req.body;
+    if (!content || !title) {
       return res.status(400).json({
         success: false,
-        message: "Content and type are required fields.",
+        message: "Content and title are required fields.",
       });
     }
 
@@ -28,17 +28,18 @@ export async function PublicPostCreation(req, res) {
       files = [result.secure_url];
     }
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found.",
       });
     }
-    const newPost = Post({
+    const newPost = new Post({
       author: user._id,
-      type,
+      type: "public",
       content,
+      title,
       files: files || [],
     });
     await newPost.save();
@@ -108,12 +109,12 @@ export async function PublicPostDelete(req, res) {
 
 export async function AnnouncementPostCreation(req, res) {
   try {
-    let { type, content, files } = req.body;
+    let { content, files, title } = req.body;
 
-    if (!content || !type) {
+    if (!content || !title) {
       return res.status(400).json({
         success: false,
-        message: "Content and type are required fields.",
+        message: "Content and title are required fields.",
       });
     }
 
@@ -137,7 +138,7 @@ export async function AnnouncementPostCreation(req, res) {
       files = [result.secure_url];
     }
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -147,9 +148,10 @@ export async function AnnouncementPostCreation(req, res) {
 
     const newPost = new Post({
       author: user._id,
-      type,
+      type: "announcement",
       content,
       files: files || [],
+      title
     });
     await newPost.save();
 
