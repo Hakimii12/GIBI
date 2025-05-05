@@ -15,6 +15,10 @@ const APIFeatures = class {
         section: ["target.section"], 
         year:["year"],
         title: ["title"],
+        name:["name"],
+        email:["email"],
+        batch:["batch"],
+        occupation:["occupation"],
       };
   
 

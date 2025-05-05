@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'teacher', 'student'], required: true },
   isApproved: { type: Boolean, default: false },
-  status:{ type: String, enum: ['approved', 'rejected', 'suspended'], required: true },
+  
   suspendedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   // Admin specific
   title: String,
