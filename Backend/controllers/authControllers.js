@@ -188,10 +188,22 @@ export async function Approval(req, res) {
 
   await user.save();
 
-  return res.status(200).json({
-    message: `User ${userStatus === "approve" ? "approved" : "suspended"} successfully!`,
-    user,
-  });
+  if (userStatus === "approve") {
+    return res.status(200).json({
+      message: "User approved successfully!",
+      user,
+    });
+  } else if (userStatus === "reject") {
+    return res.status(200).json({
+      message: "User rejected successfully!",
+      user,
+    });
+  } else {
+    return res.status(200).json({
+      message: "User suspended successfully!",
+      user,
+    });
+  }
 }
 export async function TeacherResponsibilities(req, res) {
   const { id } = req.params;
