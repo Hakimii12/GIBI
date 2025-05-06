@@ -27,13 +27,11 @@ const APIFeatures = class {
 
       Object.keys(queryObj).forEach((key) => {
         if (multiPathFields[key]) {
-          // For fields with multiple paths, create an $or condition
           const orConditions = multiPathFields[key].map((path) => ({
             [path]: queryObj[key],
           }));
           finalFilter.$or = orConditions;
         } else {
-          // For other fields, add directly
           finalFilter[key] = queryObj[key];
         }
       });
@@ -41,7 +39,6 @@ const APIFeatures = class {
       let queryStr = JSON.stringify(finalFilter);
       queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
   
-      // Apply the filter to the query
       this.query = this.query.find(JSON.parse(queryStr));
       return this;
     }
