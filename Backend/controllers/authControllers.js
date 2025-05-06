@@ -16,7 +16,10 @@ export async function Register(req, res) {
   } = req.body;
 
   try {
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({   $or: [
+      { email:email },
+      { studentID:studentID }
+    ] });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -33,7 +36,7 @@ export async function Register(req, res) {
     }
 
     if (role === "student") {
-      if (!batch || !section || !school || !department || ! studentID ) {
+      if (!batch || !section || !school ||  ! studentID ) {
         return res.status(400).json({
           message: "Batch, section, school,department and studentID are required for students"
         });
@@ -58,7 +61,7 @@ export async function Register(req, res) {
       ...(role === "teacher" && { occupation })
     });
     await newUser.save();
-
+    console.log(newUser)
     return res.status(201).json({
       success: true,
       message: "User registered successfully. Waiting for admin approval.",
