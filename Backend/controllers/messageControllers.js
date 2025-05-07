@@ -1,39 +1,50 @@
 import Conversation from "../models/Conversation.js";
 import Messages from "../models/MessageModel.js";
+import User from "../models/User.js";
+export async function CreateMessage(req, res) {
+    const { recipientId, message } = req.body;
+    const sendId = req.user._id;
 
-export async function CreateMessage(req,res){
-    const {recipientId,message}=req.body;
-    const sendId=req.user._id;
     try {
-        let conversation= await Conversation.findOne({ participants: { $all: [sendId, recipientId] } });
-        if(!conversation){
-               conversation=new Conversation({
-                participants:[sendId,recipientId],
-                lastMessage:{
-                    text:message,
-                    sender:sendId 
+        const receiver = await User.findById(recipientId);
+        if (!receiver) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        let conversation = await Conversation.findOne({
+            participants: { $all: [sendId, recipientId] }
+        });
+
+        if (!conversation) {
+            conversation = new Conversation({
+                participants: [sendId, recipientId],
+                lastMessage: {
+                    text: message,
+                    sender: sendId
                 }
             });
             await conversation.save();
         }
-        const newMessage=new Messages({
-            conversationId:conversation._id,
-            sender:sendId,
-            text:message
-        })
+
+        const newMessage = new Messages({
+            conversationId: conversation._id,
+            sender: sendId,
+            text: message
+        });
+
         await Promise.all([
             newMessage.save(),
             conversation.updateOne({
-                lastMessage:{
-                    text:message,
-                    sender:sendId
+                lastMessage: {
+                    text: message,
+                    sender: sendId
                 }
             })
-        ])
+        ]);
+
         res.status(201).json(newMessage);
     } catch (error) {
-        res.status(500).json({message:error.message})
-        console.log(error.message)
+        res.status(500).json({ message: error.message });
+        console.log(error.message);
     }
 }
 export async function GetMessage(req,res){
