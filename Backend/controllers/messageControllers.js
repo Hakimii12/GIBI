@@ -1,8 +1,12 @@
 import Conversation from "../models/Conversation.js";
 import Messages from "../models/MessageModel.js";
-
+import User from "../models/User.js";
 export async function CreateMessage(req,res){
     const {recipientId,message}=req.body;
+    const receiver =User.findById(recipientId)
+    if(!receiver){
+        return res.status(404).json({message:"user not found"})
+    }
     const sendId=req.user._id;
     try {
         let conversation= await Conversation.findOne({ participants: { $all: [sendId, recipientId] } });
