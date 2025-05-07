@@ -1,7 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Messages from "../models/MessageModel.js";
 import User from "../models/User.js";
-import mongoose from "mongoose";
 export async function CreateMessage(req, res) {
     const { recipientId, message } = req.body;
     const sendId = req.user._id;
