@@ -41,7 +41,6 @@ export async function GetMessage(req,res){
     const sendId=req.user._id
     try {   
         const conversation = await Conversation.findOne({participants:{$all:[sendId,otherId]}});
-        console.log(conversation._id)
         if (!conversation) {
             return res.status(404).json({message: "Conversation not found"});
         }
@@ -54,10 +53,9 @@ export async function GetMessage(req,res){
 }
 export async function GetConversations(req,res){
     const userId=req.user._id
-    console.log(userId)
     try {
         const conversations = await Conversation.find({ participants: userId }).populate(
-            { path: "participants", select: "username profilepic" });
+            { path: "participants", select: "name profilePic" });
         res.status(200).json(conversations);
     } catch (error) {
         res.status(500).json({message:error.message})
