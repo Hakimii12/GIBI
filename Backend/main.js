@@ -20,7 +20,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:8080",
-      "https://preview--role-based-education-sphere.lovable.app/",
+      "https://preview--role-based-education-sphere.lovable.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
