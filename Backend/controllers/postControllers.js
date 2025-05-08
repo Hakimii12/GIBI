@@ -59,19 +59,21 @@ export async function PublicPostCreation(req, res) {
 }
 export async function GetPublicPost(req, res) {
   try {
-    const totalDocs = await Post.countDocuments({ type: "public" })
+    const totalDocs = await Post.countDocuments({ type: "public" }).sort({
+      createdAt: -1,
+    });
+    const features = new APIFeatures(Post.find({ type: "public" }), req.query)
+      .filter()
+      .search()
+      .sort()
+      .limitField()
+      .paginate();
+    const posts = await features.query
+      .populate(
+        "author",
+        "name email batch section school department profilePic"
+      )
       .sort({ createdAt: -1 });
-       const features = new APIFeatures(
-            Post.find({ type: "public" }), 
-            req.query
-          )
-            .filter()
-            .search()
-            .sort()
-            .limitField()
-            .paginate();
-      const posts=await features.query.populate( "author",
-      "name email batch section school department profilePic").sort({ createdAt: -1 });
     if (!posts || posts.length === 0) {
       return res.status(404).json({
         success: false,
@@ -90,12 +92,56 @@ export async function GetPublicPost(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-        posts
+      posts,
     });
   } catch (error) {
-    return res.status(500).json({message:error.message})
+    return res.status(500).json({ message: error.message });
   }
 }
+
+export async function GetPosts(req, res) {
+  try {
+    const features = new APIFeatures(Post.find({}), req.query)
+      .filter()
+      .search();
+
+    const filteredCount = await Post.countDocuments(features.query.getFilter());
+
+    features.sort().limitField().paginate();
+
+    const posts = await features.query
+      .populate(
+        "author",
+        "name email batch section school department profilePic"
+      )
+      .sort({ createdAt: -1 });
+
+    if (!posts || posts.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Posts Found.",
+      });
+    }
+
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      pagination: {
+        total: filteredCount, // Count of filtered documents
+        limit,
+        page,
+        totalPages: Math.ceil(filteredCount / limit),
+      },
+      posts,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
+
 export async function PublicPostDelete(req, res) {
   try {
     const postID = req.params.id;
@@ -125,7 +171,6 @@ export async function PublicPostDelete(req, res) {
     });
   }
 }
-
 
 export async function AnnouncementPostCreation(req, res) {
   try {
@@ -171,7 +216,7 @@ export async function AnnouncementPostCreation(req, res) {
       type: "announcement",
       content,
       files: files || [],
-      title
+      title,
     });
     await newPost.save();
 
@@ -191,19 +236,24 @@ export async function AnnouncementPostCreation(req, res) {
 
 export async function GetAnnouncementPost(req, res) {
   try {
-    const totalDocs = await Post.countDocuments({ type: "announcement" })
+    const totalDocs = await Post.countDocuments({ type: "announcement" }).sort({
+      createdAt: -1,
+    });
+    const features = new APIFeatures(
+      Post.find({ type: "announcement" }),
+      req.query
+    )
+      .filter()
+      .search()
+      .sort()
+      .limitField()
+      .paginate();
+    const posts = await features.query
+      .populate(
+        "author",
+        "name email batch section school department profilePic"
+      )
       .sort({ createdAt: -1 });
-       const features = new APIFeatures(
-            Post.find({ type: "announcement" }), 
-            req.query
-          )
-            .filter()
-            .search()
-            .sort()
-            .limitField()
-            .paginate();
-      const posts=await features.query.populate( "author",
-      "name email batch section school department profilePic").sort({ createdAt: -1 });
     if (!posts || posts.length === 0) {
       return res.status(404).json({
         success: false,
@@ -222,10 +272,10 @@ export async function GetAnnouncementPost(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-        posts,
+      posts,
     });
   } catch (error) {
-    return res.status(500).json({message:error.message})
+    return res.status(500).json({ message: error.message });
   }
 }
 export async function AnnouncementPostDelete(req, res) {
@@ -261,17 +311,18 @@ export async function GetMyPost(req, res) {
   try {
     const userId = req.user.id;
     const totalDocs = await Post.countDocuments({ author: userId });
-    const features = new APIFeatures(
-      Post.find({ author: userId }), 
-      req.query
-    )
+    const features = new APIFeatures(Post.find({ author: userId }), req.query)
       .filter()
       .search()
       .sort()
       .limitField()
       .paginate();
-    const posts = await features.query.populate("author", "name email batch section school department profilePic")
-      .sort({ createdAt: -1 }); 
+    const posts = await features.query
+      .populate(
+        "author",
+        "name email batch section school department profilePic"
+      )
+      .sort({ createdAt: -1 });
 
     if (!posts || posts.length === 0) {
       return res.status(404).json({
@@ -292,7 +343,7 @@ export async function GetMyPost(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-        posts
+      posts,
     });
   } catch (error) {
     console.error("Error fetching my posts:", error);
@@ -300,7 +351,5 @@ export async function GetMyPost(req, res) {
       success: false,
       message: "Server error. Please try again later.",
     });
-    
   }
-
 }
