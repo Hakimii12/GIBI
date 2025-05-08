@@ -10,6 +10,7 @@ import {
   GetPublicPost,
   PublicPostDelete,
   GetMyPost,
+  GetPosts,
 } from "../controllers/postControllers.js";
 const router = express.Router();
 router.post(
@@ -19,40 +20,25 @@ router.post(
   Upload.single("files"),
   AnnouncementPostCreation
 );
-router.get(
-  "/getAnnouncementPost",
-  Authenticated(),
-  GetAnnouncementPost
-);
-
+router.get("/getAnnouncementPost", Authenticated(), GetAnnouncementPost);
+router.get("/", Authenticated(), GetPosts);
 router.delete(
   "/announcementPostDelete/:id",
   Authenticated(),
   Authorization("admin"),
-  AnnouncementPostDelete  )
+  AnnouncementPostDelete
+);
 
 router.post(
   "/publicPostCreation",
-  Authenticated(),  
+  Authenticated(),
   Upload.single("files"),
   PublicPostCreation
-)
+);
 
-router.get(
-  "/getPublicPost",
-  Authenticated(),
-  GetPublicPost
-)
+router.get("/getPublicPost", Authenticated(), GetPublicPost);
 
-router.delete(
-  "/publicPostDelete/:id",
-  Authenticated(),
-  PublicPostDelete,
-)
+router.delete("/publicPostDelete/:id", Authenticated(), PublicPostDelete);
 
-router.get(
-  "/getMyPost",
-  Authenticated(),  
-  GetMyPost
-)
+router.get("/getMyPost", Authenticated(), GetMyPost);
 export default router;
