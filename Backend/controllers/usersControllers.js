@@ -23,6 +23,49 @@ export async function GetAllUser(req, res) {
     res.status(500).json({ message: error.message });
   }
 }
+
+export async function getUsers(req, res) {
+  try {
+    const features = new APIFeatures(User.find({}), req.query)
+      .filter()
+      .search();
+
+    const filteredCount = await User.countDocuments(features.query.getFilter());
+
+    features.sort().limitField().paginate();
+
+    const users = await features.query.select(
+      "name email batch section school department profilePic -password"
+    );
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Users Found.",
+      });
+    }
+
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+
+    res.status(200).json({
+      status: "success",
+      results: users.length,
+      pagination: {
+        total: filteredCount, // Count of filtered documents
+        limit,
+        page,
+        totalPages: Math.ceil(filteredCount / limit),
+      },
+      users,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+}
 export async function FilterBasedSection(req, res) {
   try {
     const filters = {
@@ -36,8 +79,8 @@ export async function FilterBasedSection(req, res) {
     const students = await User.find(filters)
       .select("name email batch section school department profilePic")
       .lean();
-    if(!students || students.length === 0){
-      return res.status(404).json({message:"No students found"})
+    if (!students || students.length === 0) {
+      return res.status(404).json({ message: "No students found" });
     }
     res.status(200).json({
       success: true,
@@ -55,23 +98,20 @@ export async function FilterBasedSection(req, res) {
 export async function StudentFiltering(req, res) {
   try {
     const totalDocs = await User.countDocuments({ role: "student" });
-     const features = new APIFeatures(
-          User.find({ role: "student" }), 
-          req.query
-        )
-          .filter()
-          .search()
-          .sort()
-          .limitField()
-          .paginate();
+    const features = new APIFeatures(User.find({ role: "student" }), req.query)
+      .filter()
+      .search()
+      .sort()
+      .limitField()
+      .paginate();
 
-    const student =  await features.query.select(
-      "name email batch section school department profilePic"
-    ).select("-password -secAssigned");
+    const student = await features.query
+      .select("name email batch section school department profilePic")
+      .select("-password -secAssigned");
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
 
-      res.status(200).json({
+    res.status(200).json({
       status: "success",
       results: student.length,
       pagination: {
@@ -80,7 +120,7 @@ export async function StudentFiltering(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-        student
+      student,
     });
   } catch (error) {
     console.error(error);
@@ -93,23 +133,20 @@ export async function StudentFiltering(req, res) {
 export async function TeacherFiltering(req, res) {
   try {
     const totalDocs = await User.countDocuments({ role: "teacher" });
-     const features = new APIFeatures(
-          User.find({ role: "teacher" }), 
-          req.query
-        )
-          .filter()
-          .search()
-          .sort()
-          .limitField()
-          .paginate();
+    const features = new APIFeatures(User.find({ role: "teacher" }), req.query)
+      .filter()
+      .search()
+      .sort()
+      .limitField()
+      .paginate();
 
-    const teacher =  await features.query.select(
+    const teacher = await features.query.select(
       "name email batch section school department profilePic"
     );
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
 
-      res.status(200).json({
+    res.status(200).json({
       status: "success",
       results: teacher.length,
       pagination: {
@@ -118,7 +155,7 @@ export async function TeacherFiltering(req, res) {
         page,
         totalPages: Math.ceil(totalDocs / limit),
       },
-        teacher
+      teacher,
     });
   } catch (error) {
     console.error(error);
@@ -147,8 +184,8 @@ export async function ProfileUpdate(req, res) {
   try {
     // Authorization check
     if (userId.toString() !== id.toString()) {
-      return res.status(403).json({ 
-        message: "You are not authorized to update this profile" 
+      return res.status(403).json({
+        message: "You are not authorized to update this profile",
       });
     }
 
@@ -174,7 +211,8 @@ export async function ProfileUpdate(req, res) {
       user.section = section || user.section;
       user.school = school || user.school;
       user.department = department || user.department;
-    } else if (user.role === "teacher") {  // Fixed duplicate condition
+    } else if (user.role === "teacher") {
+      // Fixed duplicate condition
       user.occupation = occupation || user.occupation;
     } else if (user.role === "admin") {
       user.title = title || user.title;
