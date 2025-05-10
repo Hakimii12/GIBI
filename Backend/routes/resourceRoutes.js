@@ -1,7 +1,7 @@
 import Authorization from "../middlewares/Authorization.js";
 import Upload from "../middlewares/Multer.js";
-import Authenticated from "../middlewares/Authenticated.js"
-import express from "express"
+import Authenticated from "../middlewares/Authenticated.js";
+import express from "express";
 import {
   ExitExamDelete,
   GetExitExam,
@@ -9,8 +9,22 @@ import {
   ResourceDelete,
   GetResource,
   ResourceCreation,
+  getResources,
+  deleteResource,
+  getResource,
 } from "../controllers/resourceControllers.js";
 const router = express.Router();
+router
+  .route("/")
+  .get(getResources)
+  .post(
+    Authenticated(),
+    Authorization("teacher", "admin"),
+    Upload.array("files"),
+    ResourceCreation
+  );
+
+router.route("/:id").get(getResource).delete(deleteResource);
 router.post(
   "/createExit-exams",
   Authenticated(),
