@@ -143,7 +143,7 @@ export async function getPosts(req, res) {
 }
 export async function createPost(req, res) {
   try {
-    let { content, files, title } = req.body;
+    let { content, files, title, type } = req.body;
     if (!content || !title) {
       return res.status(400).json({
         success: false,
@@ -177,7 +177,7 @@ export async function createPost(req, res) {
     }
     const newPost = new Post({
       author: user._id,
-      type: "public",
+      type: type || "public",
       content,
       title,
       files: files || [],
