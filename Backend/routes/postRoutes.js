@@ -22,7 +22,7 @@ Authorization("admin"),
     .get(Authenticated(), Upload.single("files"), getPosts)
     .post(
       Authenticated(),
-      Authorization("admin"),
+      Authorization('admin', 'teacher', 'student'),
       Upload.single("files"),
       createPost
     );
