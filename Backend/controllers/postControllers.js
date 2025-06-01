@@ -99,7 +99,7 @@ export async function GetPublicPost(req, res) {
   }
 }
 
-export async function GetPosts(req, res) {
+export async function getPosts(req, res) {
   try {
     const features = new APIFeatures(Post.find({}), req.query)
       .filter()
@@ -141,7 +141,112 @@ export async function GetPosts(req, res) {
     return res.status(500).json({ message: error.message });
   }
 }
+export async function createPost(req, res) {
+  try {
+    let { content, files, title, type } = req.body;
+    if (!content || !title) {
+      return res.status(400).json({
+        success: false,
+        message: "Content and title are required fields.",
+      });
+    }
 
+    if (req.file) {
+      let resource_type = "auto";
+      const mime = req.file.mimetype;
+      if (
+        mime === "application/pdf" ||
+        mime === "application/vnd.ms-powerpoint" ||
+        mime ===
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ) {
+        resource_type = "raw";
+      }
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        resource_type: resource_type,
+      });
+      files = [result.secure_url];
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+    const newPost = new Post({
+      author: user._id,
+      type: type || "public",
+      content,
+      title,
+      files: files || [],
+    });
+    await newPost.save();
+    res.status(201).json({
+      success: true,
+      message: "Post created successfully.",
+      data: newPost,
+    });
+  } catch {
+    return res.status(500).json({ message: error.message });
+  }
+}
+
+export async function getPost(req, res) {
+  try {
+    const { id } = req.params;
+    const post = await Post.findById(id)
+      .populate(
+        "author",
+        "name email batch section school department profilePic"
+      )
+      .sort({ createdAt: -1 });
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found.",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      post,
+    });
+  } catch {
+    return res.status(500).json({
+      message: "Server error. Please try again later.",
+    });
+  }
+}
+
+export async function deletePost(req, res) {
+  try {
+    const { id } = req.params;
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found.",
+      });
+    }
+    if (post.author.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this post.",
+      });
+    }
+    await Post.findByIdAndDelete(id);
+    res.status(200).json({
+      success: true,
+      message: "Post deleted successfully.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+}
 export async function PublicPostDelete(req, res) {
   try {
     const postID = req.params.id;
