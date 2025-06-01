@@ -9,8 +9,8 @@ import userRoutes from "./routes/userRoutes.js";
 import instructionalRoutes from "./routes/instructional.js";
 import engagementRoutes from "./routes/engagementRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import { app ,server} from "./Socket/socket.js";
 import cors from "cors";
-const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -36,6 +36,6 @@ app.use("/api/post", postRoutes);
 app.get("/", (req, res) => {
   res.send("Server is running 🚀");
 });
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`server is running 🚀 on port http://localhost:/${port}`);
 });
