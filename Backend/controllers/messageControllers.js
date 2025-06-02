@@ -1,6 +1,7 @@
 import Conversation from "../models/Conversation.js";
 import Messages from "../models/MessageModel.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 export async function CreateMessage(req, res) {
     const { recipientId, message } = req.body;
     const sendId = req.user._id;
@@ -64,7 +65,7 @@ export async function GetMessage(req,res){
 }
 export async function GetConversations(req,res){
     const userId=req.user._id
-    if (!isValidObjectId(userId)) {
+    if (!mongoose.isValidObjectId(userId)) {
         return res.status(400).json({ message: "Invalid user ID" });
     }
     try {
