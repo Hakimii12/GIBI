@@ -68,6 +68,9 @@ export async function GetConversations(req,res){
     if (!mongoose.isValidObjectId(userId)) {
         return res.status(400).json({ message: "Invalid user ID" });
     }
+     if (!(userId instanceof mongoose.Types.ObjectId)) {
+        userId = new mongoose.Types.ObjectId(userId);
+    }
     try {
         const conversations = await Conversation.find({ participants: userId }).populate(
             { path: "participants", select: "name profilePic" });
