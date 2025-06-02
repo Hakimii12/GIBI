@@ -64,6 +64,9 @@ export async function GetMessage(req,res){
 }
 export async function GetConversations(req,res){
     const userId=req.user._id
+    if (!isValidObjectId(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+    }
     try {
         const conversations = await Conversation.find({ participants: userId }).populate(
             { path: "participants", select: "name profilePic" });
